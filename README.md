@@ -24,7 +24,7 @@ This is a repository for Telegram bot that will be developed by 11th team during
 
 ## Support
 
-### [Bugs / Issues]
+### Bugs / Issues
 If you discover a bug in the bot, please [search our issue tracker](https://github.com/nn-students-2020h1/11-command/issues) first. If it hasn't been reported, please [create a new issue](https://github.com/nn-students-2020h1/11-command/issues/new).
 
 ### [Pull Requests](https://github.com/nn-students-2020h1/11-command/pulls)
