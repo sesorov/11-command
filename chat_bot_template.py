@@ -5,6 +5,7 @@ import logging
 import time
 import json
 import os
+import requests
 from setup import PROXY, TOKEN
 from telegram import Bot, Update
 from telegram.ext import CallbackContext, CommandHandler, Filters, MessageHandler, Updater
@@ -22,7 +23,7 @@ users_action = []
 USER_ACTIONS_FILE = "user_actions.json"
 
 
-def command_handle(func):
+def handle_command(func):
     def inner(*args, **kwargs):
         update = args[0]
         if update:
@@ -37,19 +38,19 @@ def command_handle(func):
     return inner
 
 
-@command_handle
-def start(update: Update, context: CallbackContext):
+@handle_command
+def handle_start(update: Update, context: CallbackContext):
     """Send a message when the command /start is issued."""
     update.message.reply_text(f'Привет, {update.effective_user.first_name}!')
 
 
-@command_handle
-def chat_help(update: Update, context: CallbackContext):
+@handle_command
+def handle_help(update: Update, context: CallbackContext):
     """Send a message when the command /help is issued."""
     update.message.reply_text('Введи команду /start для начала. ')
 
 
-def get_history(update: Update, context: CallbackContext):
+def handle_get_history(update: Update, context: CallbackContext):
     count = 0
     for action in users_action[::-1]:
         if action["user_name"] == update.effective_user.first_name and count != 5:
@@ -57,13 +58,24 @@ def get_history(update: Update, context: CallbackContext):
                                       f" text: \"{action['text']}\", time: {action['time']}")
             count += 1
     if count == 0:
-        update.message.reply_text("You have't done anything yet")
+        update.message.reply_text("You haven't done anything yet")
 
 
-@command_handle
-def echo(update: Update, context: CallbackContext):
+@handle_command
+def handle_echo(update: Update, context: CallbackContext):
     """Echo the user message."""
     update.message.reply_text(update.message.text)
+
+@handle_command
+def handle_fact(update: Update, context: CallbackContext):
+    """third homework"""
+    max_entry = -1
+    json_response = requests.get('https://cat-fact.herokuapp.com/facts').json()
+
+    for entry in json_response['all']:
+        if max_entry < int(entry['upvotes']):
+            max_entry = int(entry['upvotes'])
+    update.message.reply_text(f"Max upvote is {max_entry}.")
 
 
 def save_history():
@@ -92,12 +104,13 @@ def main():
     load_history()
     updater = Updater(bot=bot, use_context=True)
     # on different commands - answer in Telegram
-    updater.dispatcher.add_handler(CommandHandler('start', start))
-    updater.dispatcher.add_handler(CommandHandler('help', chat_help))
-    updater.dispatcher.add_handler(CommandHandler('history', get_history))
+    updater.dispatcher.add_handler(CommandHandler('start', handle_start))
+    updater.dispatcher.add_handler(CommandHandler('help', handle_help))
+    updater.dispatcher.add_handler(CommandHandler('history', handle_get_history))
+    updater.dispatcher.add_handler(CommandHandler('fact', handle_fact))
 
     # on noncommand i.e message - echo the message on Telegram
-    updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
+    updater.dispatcher.add_handler(MessageHandler(Filters.text, handle_echo))
 
     # log all errors
     updater.dispatcher.add_error_handler(error)
@@ -109,7 +122,6 @@ def main():
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
-
 
 if __name__ == '__main__':
     logger.info('Start Bot')

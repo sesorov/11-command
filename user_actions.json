@@ -1,0 +1,14 @@
+[
+  {
+    "user_name": "Dmity",
+    "function": "handle_echo",
+    "text": "Hello",
+    "time": "12:07:33"
+  },
+  {
+    "user_name": "Dmity",
+    "function": "handle_echo",
+    "text": "Text",
+    "time": "12:07:40"
+  }
+]
