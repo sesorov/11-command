@@ -1,5 +1,0 @@
-{'user_name': 'Dmity', 'function': 'history', 'text': '/history', 'time': 'Thu Mar  5 06:54:50 2020'}
-{'user_name': 'Dmity', 'function': 'echo', 'text': '8', 'time': 'Thu Mar  5 06:54:46 2020'}
-{'user_name': 'Dmity', 'function': 'echo', 'text': '7', 'time': 'Thu Mar  5 06:54:46 2020'}
-{'user_name': 'Dmity', 'function': 'echo', 'text': '6', 'time': 'Thu Mar  5 06:54:46 2020'}
-{'user_name': 'Dmity', 'function': 'echo', 'text': '5', 'time': 'Thu Mar  5 06:54:45 2020'}
