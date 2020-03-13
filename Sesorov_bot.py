@@ -4,6 +4,8 @@
 import logging
 import json
 import os
+import requests
+import telegram
 from datetime import datetime
 
 from setup import PROXY, TOKEN
@@ -48,7 +50,7 @@ def log(func):
             try:
                 os.remove(f"{update.message.chat.id}.json")
             except FileNotFoundError:
-                print("No such file; probably, first use.")
+                print("No such file; probably, first use. Creating new.")
             with open(f"{update.message.chat.id}.json", 'w+') as handle:
                 json.dump(ACTION_LOG, handle, indent=2)
             handle.close()
@@ -87,6 +89,14 @@ def history(update: Update, context: CallbackContext):
     handle.close()
 
 @log
+def fact(update: Update, context: CallbackContext):
+    fact = requests.get("https://cat-fact.herokuapp.com/facts").json()["all"][0]
+    quote = f"<i>{fact['text']}</i>"
+    author = f"<b>Author: {fact['user']['name']['first']} {fact['user']['name']['last']}</b>"
+    update.message.reply_text("Well, time for a good quote...")
+    update.message.reply_text(f'«{quote}»\n\t                     一 {author:}', parse_mode=telegram.ParseMode.HTML)
+
+@log
 def error(update: Update, context: CallbackContext):
     """Log Errors caused by Updates."""
     logger.warning(f'Update {update} caused error {context.error}')
@@ -103,6 +113,7 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_handler(CommandHandler('help', chat_help))
     updater.dispatcher.add_handler(CommandHandler('history', history))
+    updater.dispatcher.add_handler(CommandHandler('fact', fact))
 
     # on noncommand i.e message - echo the message on Telegram
     updater.dispatcher.add_handler(MessageHandler(Filters.text, echo))
