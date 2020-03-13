@@ -6,8 +6,9 @@ import time
 import json
 import os
 import requests
+import image_handler as img_h
 from setup import PROXY, TOKEN
-from telegram import Bot, Update
+from telegram import Bot, Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import CallbackContext, CommandHandler, Filters, MessageHandler, Updater
 
 # Enable logging
@@ -16,11 +17,16 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 logger = logging.getLogger(__name__)
 
+bot = Bot(
+        token=TOKEN,
+        base_url=PROXY,  # delete it if connection via VPN
+    )
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
 
 users_action = []
 USER_ACTIONS_FILE = "user_actions.json"
+IMAGE_PATH = "ing.jpg"
 
 
 def handle_command(func):
@@ -66,6 +72,7 @@ def handle_echo(update: Update, context: CallbackContext):
     """Echo the user message."""
     update.message.reply_text(update.message.text)
 
+
 @handle_command
 def handle_fact(update: Update, context: CallbackContext):
     """third homework"""
@@ -91,16 +98,37 @@ def load_history():
         users_action = json.load(file)
 
 
+@handle_command
+def get_image(update: Update, context: CallbackContext):
+    """Comments will be later"""
+    file = update.message.photo[-1].file_id
+    image = bot.get_file(file)
+    image.download('initial.jpg')
+    custom_keyboard = [
+        ["/Example"]
+    ]
+    reply_markup = ReplyKeyboardMarkup(custom_keyboard)
+    bot.send_message(chat_id=update.message.chat_id,
+                     text="You need to choice any method",
+                     reply_markup=reply_markup)
+
+
 def error(update: Update, context: CallbackContext):
     """Log Errors caused by Updates."""
     logger.warning(f'Update {update} caused error {context.error}')
 
 
+@handle_command
+def handle_image(update: Update, context: CallbackContext):
+    """Comments will be later"""
+    img_h.get_black_white_img()
+    update.message.reply_text("Processing...")
+    bot.send_photo(chat_id=update.message.chat_id, photo=open("res.jpg", mode='rb'))
+    update.message.reply_text("Your image!")
+
+
 def main():
-    bot = Bot(
-        token=TOKEN,
-        base_url=PROXY,  # delete it if connection via VPN
-    )
+
     load_history()
     updater = Updater(bot=bot, use_context=True)
     # on different commands - answer in Telegram
@@ -108,13 +136,14 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('help', handle_help))
     updater.dispatcher.add_handler(CommandHandler('history', handle_get_history))
     updater.dispatcher.add_handler(CommandHandler('fact', handle_fact))
+    updater.dispatcher.add_handler(CommandHandler('Example', handle_image))
+    updater.dispatcher.add_handler(MessageHandler(Filters.photo, get_image))
 
     # on noncommand i.e message - echo the message on Telegram
     updater.dispatcher.add_handler(MessageHandler(Filters.text, handle_echo))
 
     # log all errors
     updater.dispatcher.add_error_handler(error)
-
     # Start the Bot
     updater.start_polling()
 
@@ -122,6 +151,7 @@ def main():
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
+
 
 if __name__ == '__main__':
     logger.info('Start Bot')
