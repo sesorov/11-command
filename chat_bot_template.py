@@ -78,11 +78,11 @@ def handle_fact(update: Update, context: CallbackContext):
     """third homework"""
     max_entry = -1
     json_response = requests.get('https://cat-fact.herokuapp.com/facts').json()
-
     for entry in json_response['all']:
         if max_entry < int(entry['upvotes']):
             max_entry = int(entry['upvotes'])
-    update.message.reply_text(f"Max upvote is {max_entry}.")
+            fact = f"{entry['text']}"
+    update.message.reply_text(fact)
 
 
 def save_history():
@@ -100,7 +100,8 @@ def load_history():
 
 @handle_command
 def get_image(update: Update, context: CallbackContext):
-    """Comments will be later"""
+    """This method getting an image and give choice to user
+            what to do with image"""
     file = update.message.photo[-1].file_id
     image = bot.get_file(file)
     image.download('initial.jpg')
@@ -118,13 +119,22 @@ def error(update: Update, context: CallbackContext):
     logger.warning(f'Update {update} caused error {context.error}')
 
 
+def handle_image(func):
+    """Decorator for image_handler
+        This function uploading image for user and calling image handler method"""
+    def inner(*args, **kwargs):
+        update = args[0]
+        update.message.reply_text("Processing...")
+        func(*args, **kwargs)
+        bot.send_photo(chat_id=update.message.chat_id, photo=open("res.jpg", mode='rb'))
+        update.message.reply_text("Your image!")
+    return inner
+
+
+@handle_image
 @handle_command
-def handle_image(update: Update, context: CallbackContext):
-    """Comments will be later"""
+def handle_img_blk_wht(update: Update, context: CallbackContext):
     img_h.get_black_white_img()
-    update.message.reply_text("Processing...")
-    bot.send_photo(chat_id=update.message.chat_id, photo=open("res.jpg", mode='rb'))
-    update.message.reply_text("Your image!")
 
 
 def main():
@@ -136,7 +146,7 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('help', handle_help))
     updater.dispatcher.add_handler(CommandHandler('history', handle_get_history))
     updater.dispatcher.add_handler(CommandHandler('fact', handle_fact))
-    updater.dispatcher.add_handler(CommandHandler('Example', handle_image))
+    updater.dispatcher.add_handler(CommandHandler('Example', handle_img_blk_wht))
     updater.dispatcher.add_handler(MessageHandler(Filters.photo, get_image))
 
     # on noncommand i.e message - echo the message on Telegram
@@ -151,7 +161,6 @@ def main():
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
-
 
 if __name__ == '__main__':
     logger.info('Start Bot')
