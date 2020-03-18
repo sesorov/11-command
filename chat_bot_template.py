@@ -5,12 +5,9 @@ import logging
 import json
 import os
 import requests
-import telegram
-import time
 import image_handler as img_h
-
 from setup import PROXY, TOKEN
-from telegram import Bot, Update
+from telegram import Bot, Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import CallbackContext, CommandHandler, Filters, MessageHandler, Updater
 
 
@@ -20,15 +17,16 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 logger = logging.getLogger(__name__)
 
-USERS_ACTION = []
-ACTION_COUNT = 0
-
 bot = Bot(
-        token="895548858:AAHWTesxKmd6rpC3P4u6QJejsordITl3cYU",
+        token=TOKEN,
         base_url=PROXY,  # delete it if connection via VPN
     )
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
+
+USERS_ACTION = []
+USER_ACTIONS_FILE = "user_actions.json"
+IMAGE_PATH = "ing.jpg"
 
 
 def handle_command(func):
@@ -137,6 +135,24 @@ def handle_img_blk_wht(update: Update, context: CallbackContext):
     img_h.get_black_white_img()
 
 
+def handle_image(func):
+    """Decorator for image_handler
+        This function uploading image for user and calling image handler method"""
+    def inner(*args, **kwargs):
+        update = args[0]
+        update.message.reply_text("Processing...")
+        func(*args, **kwargs)
+        bot.send_photo(chat_id=update.message.chat_id, photo=open("res.jpg", mode='rb'))
+        update.message.reply_text("Your image!")
+    return inner
+
+
+@handle_image
+@handle_command
+def handle_img_blk_wht(update: Update, context: CallbackContext):
+    img_h.get_black_white_img()
+
+
 def main():
     updater = Updater(bot=bot, use_context=True)
 
@@ -153,7 +169,6 @@ def main():
 
     # log all errors
     updater.dispatcher.add_error_handler(error)
-
     # Start the Bot
     updater.start_polling()
 

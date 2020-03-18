@@ -21,6 +21,7 @@ This is a repository for Telegram bot that will be developed by 11th team during
 * `/start` - get started with your new bot;
 * `/help`- receive some instructions about the bot;
 * `/history` - get your 5 last actions;
+* `/fact` - get the most upvoted fact about cats;
 
 ## Support
 
